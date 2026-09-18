@@ -2,6 +2,9 @@ package com.project.TaskManager.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.project.TaskManager.dto.TaskRequest;
+import com.project.TaskManager.dto.TaskRespond;
 import com.project.TaskManager.entity.Task;
 import com.project.TaskManager.repository.TaskRepository;
 
@@ -26,18 +29,30 @@ public class TaskController {
     private final TaskRepository taskRepository;
     
     @GetMapping
-    public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+    public List<TaskRespond> getAllTasks() {
+        return taskRepository.findAll()
+                .stream()
+                .map(TaskRespond::from)
+                .toList();
     }
 
     @GetMapping("/search")
-    public List<Task> getTasksByTitle(@RequestParam String title) {
-        return taskRepository.findByTitleContaining(title);
+    public List<TaskRespond> getTasksByTitle(@RequestParam String title) {
+        return taskRepository.findByTitleContaining(title)
+                .stream()
+                .map(TaskRespond::from)
+                .toList();
     }
 
     @PostMapping
-    public Task createTask(@Valid @RequestBody Task task) {
-        return taskRepository.save(task);
+    public TaskRespond createTask(@Valid @RequestBody TaskRequest request) {
+        Task task = new Task();
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        task.setStatus(request.getStatus());
+
+        Task savedTask = taskRepository.save(task);
+        return TaskRespond.from(savedTask);
     }
 
     @DeleteMapping("/{id}")
